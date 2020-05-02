@@ -17,6 +17,7 @@ provider "aws" {
 variable "my_ip" {
   type = string
   # https://www.whatismyip.com/
+  # terraform fmt && terraform init && terraform apply -var="my_ip=123.123.123.123/32"
 }
 
 variable "my_key" {
