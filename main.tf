@@ -62,6 +62,25 @@ resource "aws_security_group" "self_referencing_rdp" {
   }
 }
 
+resource "aws_security_group" "self_referencing_mysql" {
+  name        = "self_referencing_mysql"
+  description = "Self Referencing MySQL"
+  vpc_id      = "vpc-0d4f716433bda1413"
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "TCP"
+    self        = true
+    description = "Self"
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_security_group" "bastion_security_group" {
   name        = "bastion_security_group"
   description = "Security Group for Bastion"
@@ -119,7 +138,11 @@ resource "aws_instance" "bastion" {
   subnet_id                   = "subnet-071692a02d8fead70" #Public A Subnet
   associate_public_ip_address = true
   key_name                    = var.my_key
-  security_groups             = [aws_security_group.bastion_security_group.id, aws_security_group.self_referencing_ssh.id, aws_security_group.self_referencing_rdp.id]
+  security_groups = [aws_security_group.bastion_security_group.id,
+    aws_security_group.self_referencing_ssh.id,
+    aws_security_group.self_referencing_rdp.id,
+    aws_security_group.self_referencing_mysql.id
+  ]
 
   lifecycle {
     ignore_changes = [security_groups]
@@ -160,17 +183,46 @@ resource "aws_instance" "linux" {
   }
 }
 
+resource "aws_db_subnet_group" "mysql-rds-subnet-group" {
+  name       = "mysql-rds-subnet-group"
+  subnet_ids = ["subnet-0a7749029f9c6cc02", "subnet-03d2524cefe73b748"]
+  tags = {
+    Name = "MySQL RDS subnet group"
+  }
+}
+resource "aws_db_instance" "mysql" {
+  identifier             = "mysql-rds"
+  skip_final_snapshot    = true
+  deletion_protection    = false
+  allocated_storage      = 20
+  storage_type           = "gp2"
+  engine                 = "mysql"
+  engine_version         = "5.7"
+  instance_class         = "db.t2.micro"
+  name                   = "mydb"
+  username               = "mydb"
+  password               = "mydbmydbmydb"
+  db_subnet_group_name   = aws_db_subnet_group.mysql-rds-subnet-group.name
+  vpc_security_group_ids = [aws_security_group.self_referencing_mysql.id]
+}
 
+/*
 output "bastion-dns" {
   value = aws_instance.bastion.public_dns
 }
-
 output "windows-ip" {
   value = aws_instance.windows.private_ip
 }
-
 output "linux-ip" {
   value = aws_instance.linux.private_ip
+}
+output "mysql-endpoint" {
+  value = aws_db_instance.mysql.endpoint
+}
+*/
+
+output "accept-cert" {
+  value = "ssh -p 22222 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem"
 }
 
 output "rdp-via-ssh-tunnel" {
@@ -179,4 +231,8 @@ output "rdp-via-ssh-tunnel" {
 
 output "ssh-via-ssh-tunnel" {
   value = "ssh -p 22222 -N -L 2222:${aws_instance.linux.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem"
+}
+
+output "mysql-via-ssh-tunnel" {
+  value = "ssh -p 22222 -N -L 3308:${aws_db_instance.mysql.endpoint} ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem"
 }
