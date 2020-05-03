@@ -1,0 +1,23 @@
+mysql --host=127.0.0.1 --port=13306 -u admin -p
+
+CREATE DATABASE mydatabase1;
+CREATE DATABASE mydatabase2;
+CREATE DATABASE mydatabase3;
+
+CREATE USER myuser1@'%';
+CREATE USER myuser2@'%';
+CREATE USER myuser3@'%';
+
+SET PASSWORD FOR myuser1@'%'=PASSWORD("Y3NlpJZ3HPOdGKeANR3sLrUyuOkkEFIl");
+SET PASSWORD FOR myuser2@'%'=PASSWORD("y7cK7H6SJW6Q9C30OAIVxZcCSB6t7hbZ");
+SET PASSWORD FOR myuser3@'%'=PASSWORD("blDZmLjn9i63KX7GER8nr2QS8toI7pSi");
+
+GRANT ALL PRIVILEGES ON mydatabase1.* TO myuser1@'%' IDENTIFIED BY 'Y3NlpJZ3HPOdGKeANR3sLrUyuOkkEFIl';
+GRANT ALL PRIVILEGES ON mydatabase2.* TO myuser2@'%' IDENTIFIED BY 'y7cK7H6SJW6Q9C30OAIVxZcCSB6t7hbZ';
+GRANT ALL PRIVILEGES ON mydatabase3.* TO myuser3@'%' IDENTIFIED BY 'blDZmLjn9i63KX7GER8nr2QS8toI7pSi';
+
+exit;
+
+mysql --host=127.0.0.1 --port=13306 -u myuser1 -p
+
+
