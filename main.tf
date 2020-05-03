@@ -7,21 +7,24 @@ provider "aws" {
   region  = "us-west-2"
 }
 
-variable "my_ip" {
-  type    = string
-  default = "128.187.0.0/16"
-}
 variable "prefix" {
   type    = string
   default = ""
 }
+
 variable "my_key" {
   type    = string
   default = ""
 }
 
-# Find image with AMI: aws ec2 describe-images --image-ids ami-003634241a8fcdec0
+######################################################################################################################################################################
+# Get My IP Address
+######################################################################################################################################################################
+data "external" "ipify" {
+  program = ["curl", "-s", "https://api.ipify.org?format=json"]
+}
 
+# Find image with AMI: aws ec2 describe-images --image-ids ami-003634241a8fcdec0
 ######################################################################################################################################################################
 # Retrieve the AMI ID for the most recent Amazon Linux 2 image 
 ######################################################################################################################################################################
@@ -49,7 +52,7 @@ resource "aws_security_group" "bastion_security_group" {
     from_port   = 22222
     to_port     = 22222
     protocol    = "TCP"
-    cidr_blocks = [var.my_ip]
+    cidr_blocks = ["${data.external.ipify.result.ip}/32"]
     description = "SSH Ingress"
   }
   egress {
@@ -73,7 +76,13 @@ resource "aws_instance" "bastion" {
   associate_public_ip_address = true
   key_name                    = var.my_key
   vpc_security_group_ids      = [aws_security_group.bastion_security_group.id]
-  user_data                   = file("change-port.sh")
+  user_data                   = <<-EOF
+    #!/bin/bash
+    sudo yum update -y && sudo yum upgrade -y
+    sudo sed -i 's/#Port 22/Port 22222/g' /etc/ssh/sshd_config
+    sudo service sshd restart
+    sudo yum install mysql -y 
+  EOF
 }
 
 ######################################################################################################################################################################
@@ -251,29 +260,29 @@ resource "aws_ssm_parameter" "mysql-password" {
 ######################################################################################################################################################################
 
 output "bastion" {
-  value = <<EOF
+  value = <<-EOF
 
-ssh -p 22222 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
-mysql --host=${aws_db_instance.mysql.address} -u admin -p ${random_password.rds-password.result}
+    ssh -p 22222 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+    mysql --host=${aws_db_instance.mysql.address} -u admin -p ${random_password.rds-password.result}
 
-EOF
+  EOF
 }
 
 output "ssh-tunnels" {
-  value = <<EOF
+  value = <<-EOF
 
-ssh -p 22222 -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
-ssh -p 22222 -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
-ssh -p 22222 -N -L 13306:${aws_db_instance.mysql.endpoint} ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+    ssh -p 22222 -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+    ssh -p 22222 -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+    ssh -p 22222 -N -L 13306:${aws_db_instance.mysql.endpoint} ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
 
-EOF
+  EOF
 }
 
 output "through-bastion" {
-  value = <<EOF
+  value = <<-EOF
 
-mysql --host=127.0.0.1 --port=13306 -u admin -p ${random_password.rds-password.result}
-ssh -i ${var.my_key}.pem -p 11122 ubuntu@127.0.0.1
+    mysql --host=127.0.0.1 --port=13306 -u admin -p ${random_password.rds-password.result}
+    ssh -i ${var.my_key}.pem -p 11122 ubuntu@127.0.0.1
 
-EOF
+  EOF
 }
