@@ -250,22 +250,30 @@ resource "aws_ssm_parameter" "mysql-password" {
 # Outputs detailing SSH Tunnel Strings 
 ######################################################################################################################################################################
 
-output "accept-cert" {
-  value = "ssh -p 22222 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem"
+output "bastion" {
+  value = <<EOF
+
+ssh -p 22222 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+mysql --host=${aws_db_instance.mysql.address} -u admin -p ${random_password.rds-password.result}
+
+EOF
 }
 
-output "mysql-from-bastion" {
-  value = "mysql --host=${aws_db_instance.mysql.address} -u admin -p ${random_password.rds-password.result}"
+output "ssh-tunnels" {
+  value = <<EOF
+
+ssh -p 22222 -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+ssh -p 22222 -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+ssh -p 22222 -N -L 13306:${aws_db_instance.mysql.endpoint} ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+
+EOF
 }
 
-output "rdp-via-ssh-tunnel" {
-  value = "ssh -p 22222 -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem"
-}
+output "through-bastion" {
+  value = <<EOF
 
-output "ssh-via-ssh-tunnel" {
-  value = "ssh -p 22222 -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem"
-}
+mysql --host=127.0.0.1 --port=13306 -u admin -p ${random_password.rds-password.result}
+ssh -i ${var.my_key}.pem -p 11122 ubuntu@127.0.0.1
 
-output "mysql-via-ssh-tunnel" {
-  value = "ssh -p 22222 -N -L 13306:${aws_db_instance.mysql.endpoint} ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem"
+EOF
 }
