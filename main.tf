@@ -17,6 +17,26 @@ variable "my_key" {
   default = ""
 }
 
+variable "vpc_id" {
+  type    = string
+  default = ""
+}
+
+variable "public_subnet" {
+  type    = string
+  default = ""
+}
+
+variable "private_subnet" {
+  type    = string
+  default = ""
+}
+
+variable "data_subnets" {
+  type    = list(string)
+  default = []
+}
+
 ######################################################################################################################################################################
 # Get My IP Address
 ######################################################################################################################################################################
@@ -47,7 +67,7 @@ data "aws_ami" "amazon-linux-2" {
 resource "aws_security_group" "bastion_security_group" {
   name        = "${var.prefix}_bastion_security_group"
   description = "Security Group for Bastion"
-  vpc_id      = "vpc-0d4f716433bda1413"
+  vpc_id      = var.vpc_id
   ingress {
     from_port   = 22222
     to_port     = 22222
@@ -72,7 +92,7 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "${var.prefix}-Bastion"
   }
-  subnet_id                   = "subnet-071692a02d8fead70" #Public A Subnet
+  subnet_id                   = var.public_subnet
   associate_public_ip_address = true
   key_name                    = var.my_key
   vpc_security_group_ids      = [aws_security_group.bastion_security_group.id]
@@ -99,7 +119,7 @@ resource "aws_instance" "bastion" {
 resource "aws_security_group" "bastion_to_ssh" {
   name        = "${var.prefix}_bastion_to_ssh"
   description = "Bastion to SSH"
-  vpc_id      = "vpc-0d4f716433bda1413"
+  vpc_id      = var.vpc_id
   ingress {
     from_port       = 22
     to_port         = 22
@@ -121,7 +141,7 @@ resource "aws_security_group" "bastion_to_ssh" {
 resource "aws_security_group" "bastion_to_rdp" {
   name        = "${var.prefix}_bastion_to_rdp"
   description = "Bastion to RDP"
-  vpc_id      = "vpc-0d4f716433bda1413"
+  vpc_id      = var.vpc_id
   ingress {
     from_port       = 3389
     to_port         = 3389
@@ -143,7 +163,7 @@ resource "aws_security_group" "bastion_to_rdp" {
 resource "aws_security_group" "bastion_to_mysql" {
   name        = "${var.prefix}_bastion_to_mysql"
   description = "Bastion to MySQL"
-  vpc_id      = "vpc-0d4f716433bda1413"
+  vpc_id      = var.vpc_id
   ingress {
     from_port       = 3306
     to_port         = 3306
@@ -200,7 +220,7 @@ resource "aws_instance" "windows" {
   tags = {
     Name = "${var.prefix}-Windows"
   }
-  subnet_id                   = "subnet-039dee9d86772d9a0" #Private A Subnet
+  subnet_id                   = var.private_subnet
   associate_public_ip_address = false
   key_name                    = var.my_key
   vpc_security_group_ids      = [aws_security_group.bastion_to_rdp.id]
@@ -215,7 +235,7 @@ resource "aws_instance" "ubuntu" {
   tags = {
     Name = "${var.prefix}-Ubuntu"
   }
-  subnet_id                   = "subnet-039dee9d86772d9a0" #Private A Subnet
+  subnet_id                   = var.private_subnet
   associate_public_ip_address = false
   key_name                    = var.my_key
   vpc_security_group_ids      = [aws_security_group.bastion_to_ssh.id]
@@ -226,13 +246,14 @@ resource "aws_instance" "ubuntu" {
 ######################################################################################################################################################################
 resource "aws_db_subnet_group" "mysql-rds-subnet-group" {
   name       = "${var.prefix}-mysql-rds-subnet-group"
-  subnet_ids = ["subnet-0a7749029f9c6cc02", "subnet-03d2524cefe73b748"]
+  subnet_ids = var.data_subnets
   tags = {
     Name = "MySQL RDS subnet group"
   }
 }
 resource "random_password" "rds-password" {
-  length = 32
+  length  = 32
+  special = false
 }
 resource "aws_db_instance" "mysql" {
   identifier             = "${var.prefix}-mysql-rds"
