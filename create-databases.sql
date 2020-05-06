@@ -1,5 +1,3 @@
-mysql --host=127.0.0.1 --port=13306 -u admin -p
-
 CREATE DATABASE mydatabase1;
 CREATE DATABASE mydatabase2;
 CREATE DATABASE mydatabase3;
@@ -17,7 +15,4 @@ GRANT ALL PRIVILEGES ON mydatabase2.* TO myuser2@'%' IDENTIFIED BY 'y7cK7H6SJW6Q
 GRANT ALL PRIVILEGES ON mydatabase3.* TO myuser3@'%' IDENTIFIED BY 'blDZmLjn9i63KX7GER8nr2QS8toI7pSi';
 
 exit;
-
-mysql --host=127.0.0.1 --port=13306 -u myuser1 -p
-
 

@@ -12,11 +12,6 @@ variable "prefix" {
   default = ""
 }
 
-variable "my_key" {
-  type    = string
-  default = ""
-}
-
 variable "vpc_id" {
   type    = string
   default = ""
@@ -42,6 +37,22 @@ variable "data_subnets" {
 ######################################################################################################################################################################
 data "external" "ipify" {
   program = ["curl", "-s", "https://api.ipify.org?format=json"]
+}
+
+######################################################################################################################################################################
+# Create Key
+######################################################################################################################################################################
+resource "tls_private_key" "infrastructure" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+resource "aws_key_pair" "generated_key" {
+  key_name   = "${var.prefix}-infrastructure-key"
+  public_key = tls_private_key.infrastructure.public_key_openssh
+}
+resource "local_file" "foo" {
+  content  = tls_private_key.infrastructure.private_key_pem
+  filename = "${path.module}/${var.prefix}-infrastructure-key.pem"
 }
 
 # Find image with AMI: aws ec2 describe-images --image-ids ami-003634241a8fcdec0
@@ -92,9 +103,9 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "${var.prefix}-Bastion"
   }
-  subnet_id                   = "subnet-071692a02d8fead70" #Public A Subnet
+  subnet_id                   = var.public_subnet
   associate_public_ip_address = true
-  key_name                    = var.my_key
+  key_name                    = aws_key_pair.generated_key.key_name
   vpc_security_group_ids      = [aws_security_group.bastion_security_group.id]
   user_data                   = <<-EOF
     #!/bin/bash
@@ -220,10 +231,11 @@ resource "aws_instance" "windows" {
   tags = {
     Name = "${var.prefix}-Windows"
   }
-  subnet_id                   = "subnet-039dee9d86772d9a0" #Private A Subnet
+  subnet_id                   = var.private_subnet
   associate_public_ip_address = false
-  key_name                    = var.my_key
+  key_name                    = aws_key_pair.generated_key.key_name
   vpc_security_group_ids      = [aws_security_group.rdp_from_bastion.id]
+  get_password_data           = true
 }
 
 ######################################################################################################################################################################
@@ -235,9 +247,9 @@ resource "aws_instance" "ubuntu" {
   tags = {
     Name = "${var.prefix}-Ubuntu"
   }
-  subnet_id                   = "subnet-039dee9d86772d9a0" #Private A Subnet
+  subnet_id                   = var.private_subnet
   associate_public_ip_address = false
-  key_name                    = var.my_key
+  key_name                    = aws_key_pair.generated_key.key_name
   vpc_security_group_ids      = [aws_security_group.ssh_from_bastion.id]
 }
 
@@ -246,7 +258,7 @@ resource "aws_instance" "ubuntu" {
 ######################################################################################################################################################################
 resource "aws_db_subnet_group" "mysql-rds-subnet-group" {
   name       = "${var.prefix}-mysql-rds-subnet-group"
-  subnet_ids = ["subnet-0a7749029f9c6cc02", "subnet-03d2524cefe73b748"]
+  subnet_ids = var.data_subnets
   tags = {
     Name = "MySQL RDS subnet group"
   }
@@ -283,8 +295,10 @@ resource "aws_ssm_parameter" "mysql-password" {
 output "bastion" {
   value = <<-EOF
 
-    ssh -p 22222 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
-    mysql --host=${aws_db_instance.mysql.address} -u admin -p ${random_password.rds-password.result}
+    chmod 400 ${aws_key_pair.generated_key.key_name}.pem
+    ssh -p 22222 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    mysql --host=${aws_db_instance.mysql.address} -uadmin -p${random_password.rds-password.result}
+    aws ec2 get-password-data --instance-id ${aws_instance.windows.id} --priv-launch-key ${aws_key_pair.generated_key.key_name}.pem
 
   EOF
 }
@@ -292,9 +306,9 @@ output "bastion" {
 output "ssh-tunnels" {
   value = <<-EOF
 
-    ssh -p 22222 -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
-    ssh -p 22222 -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
-    ssh -p 22222 -N -L 13306:${aws_db_instance.mysql.endpoint} ec2-user@${aws_instance.bastion.public_dns} -i ${var.my_key}.pem
+    ssh -p 22222 -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    ssh -p 22222 -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    ssh -p 22222 -N -L 13306:${aws_db_instance.mysql.endpoint} ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
 
   EOF
 }
@@ -302,8 +316,8 @@ output "ssh-tunnels" {
 output "through-bastion" {
   value = <<-EOF
 
-    mysql --host=127.0.0.1 --port=13306 -u admin -p ${random_password.rds-password.result}
-    ssh -i ${var.my_key}.pem -p 11122 ubuntu@127.0.0.1
+    mysql --host=127.0.0.1 --port=13306 -uadmin -p${random_password.rds-password.result}
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p 11122 ubuntu@127.0.0.1
 
   EOF
 }

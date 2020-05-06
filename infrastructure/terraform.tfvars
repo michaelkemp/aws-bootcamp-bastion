@@ -1,5 +1,4 @@
 prefix         = "kempy"
-my_key         = "bastion-byu-org-trn"
 vpc_id         = "vpc-0d4f716433bda1413"
 public_subnet  = "subnet-071692a02d8fead70"
 private_subnet = "subnet-039dee9d86772d9a0"
