@@ -116,16 +116,23 @@ resource "aws_instance" "bastion" {
 ######################################################################################################################################################################
 # Security Group to allow the Bastion to attach to the Ubuntu Server in the Private Subnet - SSH Traffic
 ######################################################################################################################################################################
+<<<<<<< HEAD:bastion/main.tf
+resource "aws_security_group" "ssh_from_bastion" {
+  name        = "${var.prefix}_ssh_from_bastion"
+  description = "SSH from Bastion"
+  vpc_id      = "vpc-0d4f716433bda1413"
+=======
 resource "aws_security_group" "bastion_to_ssh" {
   name        = "${var.prefix}_bastion_to_ssh"
   description = "Bastion to SSH"
   vpc_id      = var.vpc_id
+>>>>>>> master:main.tf
   ingress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "TCP"
-    security_groups = [aws_security_group.bastion_security_group.id]
-    description     = "Bastion Security Group"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "TCP"
+    cidr_blocks = ["${aws_instance.bastion.private_ip}/32"]
+    description = "Bastion Security Group"
   }
   egress {
     from_port   = 0
@@ -138,16 +145,23 @@ resource "aws_security_group" "bastion_to_ssh" {
 ######################################################################################################################################################################
 # Security Group to allow the Bastion to attach to the Windows Server in the Private Subnet - RDP Traffic 
 ######################################################################################################################################################################
+<<<<<<< HEAD:bastion/main.tf
+resource "aws_security_group" "rdp_from_bastion" {
+  name        = "${var.prefix}_rdp_from_bastion"
+  description = "RDP from Bastion"
+  vpc_id      = "vpc-0d4f716433bda1413"
+=======
 resource "aws_security_group" "bastion_to_rdp" {
   name        = "${var.prefix}_bastion_to_rdp"
   description = "Bastion to RDP"
   vpc_id      = var.vpc_id
+>>>>>>> master:main.tf
   ingress {
-    from_port       = 3389
-    to_port         = 3389
-    protocol        = "TCP"
-    security_groups = [aws_security_group.bastion_security_group.id]
-    description     = "Bastion Security Group"
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = "TCP"
+    cidr_blocks = ["${aws_instance.bastion.private_ip}/32"]
+    description = "Bastion Security Group"
   }
   egress {
     from_port   = 0
@@ -160,16 +174,23 @@ resource "aws_security_group" "bastion_to_rdp" {
 ######################################################################################################################################################################
 # Security Group to allow the Bastion to attach to the MySQL RDS in the Data Subnet - MySQL Traffic
 ######################################################################################################################################################################
+<<<<<<< HEAD:bastion/main.tf
+resource "aws_security_group" "mysql_from_bastion" {
+  name        = "${var.prefix}_mysql_from_bastion"
+  description = "MySQL from Bastion"
+  vpc_id      = "vpc-0d4f716433bda1413"
+=======
 resource "aws_security_group" "bastion_to_mysql" {
   name        = "${var.prefix}_bastion_to_mysql"
   description = "Bastion to MySQL"
   vpc_id      = var.vpc_id
+>>>>>>> master:main.tf
   ingress {
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "TCP"
-    security_groups = [aws_security_group.bastion_security_group.id]
-    description     = "Bastion Security Group"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "TCP"
+    cidr_blocks = ["${aws_instance.bastion.private_ip}/32"]
+    description = "Bastion Security Group"
   }
   egress {
     from_port   = 0
@@ -223,7 +244,7 @@ resource "aws_instance" "windows" {
   subnet_id                   = var.private_subnet
   associate_public_ip_address = false
   key_name                    = var.my_key
-  vpc_security_group_ids      = [aws_security_group.bastion_to_rdp.id]
+  vpc_security_group_ids      = [aws_security_group.rdp_from_bastion.id]
 }
 
 ######################################################################################################################################################################
@@ -238,7 +259,7 @@ resource "aws_instance" "ubuntu" {
   subnet_id                   = var.private_subnet
   associate_public_ip_address = false
   key_name                    = var.my_key
-  vpc_security_group_ids      = [aws_security_group.bastion_to_ssh.id]
+  vpc_security_group_ids      = [aws_security_group.ssh_from_bastion.id]
 }
 
 ######################################################################################################################################################################
@@ -267,7 +288,7 @@ resource "aws_db_instance" "mysql" {
   username               = "admin"
   password               = random_password.rds-password.result
   db_subnet_group_name   = aws_db_subnet_group.mysql-rds-subnet-group.name
-  vpc_security_group_ids = [aws_security_group.bastion_to_mysql.id]
+  vpc_security_group_ids = [aws_security_group.mysql_from_bastion.id]
 }
 resource "aws_ssm_parameter" "mysql-password" {
   name      = "${var.prefix}-mysql-password"
