@@ -25,14 +25,15 @@
     - Install BYU's awslogin
     - ```pip3 install --upgrade byu_awslogin```
     - Add local/bin to path
-        - ```vim .bashrc```
-            - ```if [ -d "$HOME/.local/bin" ] ; then
-                PATH="$HOME/.local/bin:$PATH"
-              fi```
-        - ```source .bashrc```
+        - ```
+            vim .bashrc
+                 if [ -d "$HOME/.local/bin" ] ; then
+                    PATH="$HOME/.local/bin:$PATH"
+                  fi
+            source .bashrc
+        ```
     - Install terraform
     - ```curl "https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip" -o "terraform.zip"```
     - ```unzip terraform.zip```
     - ```mv terraform .local/bin/terraform```
-
 
