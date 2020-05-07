@@ -32,6 +32,11 @@ variable "data_subnets" {
   default = []
 }
 
+variable "ssh_port" {
+  type    = number
+  default = 22222
+}
+
 ######################################################################################################################################################################
 # Get My IP Address
 ######################################################################################################################################################################
@@ -50,7 +55,7 @@ resource "aws_key_pair" "generated_key" {
   key_name   = "${var.prefix}-infrastructure-key"
   public_key = tls_private_key.infrastructure.public_key_openssh
 }
-resource "local_file" "foo" {
+resource "local_file" "write-key" {
   content  = tls_private_key.infrastructure.private_key_pem
   filename = "${path.module}/${var.prefix}-infrastructure-key.pem"
 }
@@ -78,10 +83,10 @@ data "aws_ami" "amazon-linux-2" {
 resource "aws_security_group" "bastion_security_group" {
   name        = "${var.prefix}_bastion_security_group"
   description = "Security Group for Bastion"
-  vpc_id      = "vpc-0d4f716433bda1413"
+  vpc_id      = var.vpc_id
   ingress {
-    from_port   = 22222
-    to_port     = 22222
+    from_port   = var.ssh_port
+    to_port     = var.ssh_port
     protocol    = "TCP"
     cidr_blocks = ["${data.external.ipify.result.ip}/32"]
     description = "SSH Ingress"
@@ -110,27 +115,19 @@ resource "aws_instance" "bastion" {
   user_data                   = <<-EOF
     #!/bin/bash
     sudo yum update -y && sudo yum upgrade -y
-    sudo sed -i 's/#Port 22/Port 22222/g' /etc/ssh/sshd_config
+    sudo sed -i 's/#Port 22/Port ${var.ssh_port}/g' /etc/ssh/sshd_config
     sudo service sshd restart
     sudo yum install mysql -y 
   EOF
 }
 
 ######################################################################################################################################################################
-######################################################################################################################################################################
-#
-#                Connect to the following via the BASTION: Ubuntu Linux, Windows 2019, MySQL 
-#
-######################################################################################################################################################################
-######################################################################################################################################################################
-
-######################################################################################################################################################################
-# Security Group to allow the Bastion to attach to the Ubuntu Server in the Private Subnet - SSH Traffic
+# Security Group to allow the SSH from the Bastion
 ######################################################################################################################################################################
 resource "aws_security_group" "ssh_from_bastion" {
   name        = "${var.prefix}_ssh_from_bastion"
   description = "SSH from Bastion"
-  vpc_id      = "vpc-0d4f716433bda1413"
+  vpc_id      = var.vpc_id
   ingress {
     from_port   = 22
     to_port     = 22
@@ -147,12 +144,12 @@ resource "aws_security_group" "ssh_from_bastion" {
 }
 
 ######################################################################################################################################################################
-# Security Group to allow the Bastion to attach to the Windows Server in the Private Subnet - RDP Traffic 
+# Security Group to allow the RDP from the Bastion 
 ######################################################################################################################################################################
 resource "aws_security_group" "rdp_from_bastion" {
   name        = "${var.prefix}_rdp_from_bastion"
   description = "RDP from Bastion"
-  vpc_id      = "vpc-0d4f716433bda1413"
+  vpc_id      = var.vpc_id
   ingress {
     from_port   = 3389
     to_port     = 3389
@@ -169,12 +166,12 @@ resource "aws_security_group" "rdp_from_bastion" {
 }
 
 ######################################################################################################################################################################
-# Security Group to allow the Bastion to attach to the MySQL RDS in the Data Subnet - MySQL Traffic
+# Security Group to allow the MySQL from the Bastion
 ######################################################################################################################################################################
 resource "aws_security_group" "mysql_from_bastion" {
   name        = "${var.prefix}_mysql_from_bastion"
   description = "MySQL from Bastion"
-  vpc_id      = "vpc-0d4f716433bda1413"
+  vpc_id      = var.vpc_id
   ingress {
     from_port   = 3306
     to_port     = 3306
@@ -189,6 +186,16 @@ resource "aws_security_group" "mysql_from_bastion" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+
+######################################################################################################################################################################
+######################################################################################################################################################################
+#
+#              Create Infrastructure Ubuntu Linux, Windows 2019, and MySQL Infrastructure to connect to via the Bastion 
+#
+######################################################################################################################################################################
+######################################################################################################################################################################
+
 
 ######################################################################################################################################################################
 # Retrieve the AMI ID for the most recent Microsoft Windows image 
@@ -296,7 +303,7 @@ output "bastion" {
   value = <<-EOF
 
     chmod 400 ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p 22222 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    ssh -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
     mysql --host=${aws_db_instance.mysql.address} -uadmin -p${random_password.rds-password.result}
     aws ec2 get-password-data --instance-id ${aws_instance.windows.id} --priv-launch-key ${aws_key_pair.generated_key.key_name}.pem
 
@@ -306,9 +313,9 @@ output "bastion" {
 output "ssh-tunnels" {
   value = <<-EOF
 
-    ssh -p 22222 -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p 22222 -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p 22222 -N -L 13306:${aws_db_instance.mysql.endpoint} ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    ssh -p ${var.ssh_port} -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    ssh -p ${var.ssh_port} -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    ssh -p ${var.ssh_port} -N -L 13306:${aws_db_instance.mysql.address}:3306 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
 
   EOF
 }
@@ -316,8 +323,8 @@ output "ssh-tunnels" {
 output "through-bastion" {
   value = <<-EOF
 
-    mysql --host=127.0.0.1 --port=13306 -uadmin -p${random_password.rds-password.result}
     ssh -i ${aws_key_pair.generated_key.key_name}.pem -p 11122 ubuntu@127.0.0.1
+    mysql --host=127.0.0.1 --port=13306 -uadmin -p${random_password.rds-password.result}
 
   EOF
 }
