@@ -39,58 +39,58 @@
 
 ## Terraform Bastion Infrastructure 
 
-    - ```mkdir GitRepos```
-    - ```cd GitRepos```
-    - ```git clone https://github.com/michaelkemp/aws-bootcamp-bastion.git```
-    - ```cd aws-bootcamp-bastion```
-    - ```code .```
-    - Edit bastion\terraform.tfvars
-        - This file contains the VPC-ID and Subnet-ID (Public) that the Bastion Server (and Security groups) will be created in
-        - Change the *prefix* value to your own NetId (or something memorable)
-        - Change the non standard port that you would like to SSH into (rather than using port 22) 
-    - Edit infrastructure\terraform.tfvars
-        - This file contains the VPC-ID and Subnet-ID (Public) that the Bastion Server (and Security groups) will be created in;
-        - it also contains the Subnet-IDs that the test infrastructure will be created in (Private and Data) 
-        - Change the *prefix* value to your own NetId (or something memorable)
-        - Change the non standard port that you would like to SSH into (rather than using port 22) 
+- ```mkdir GitRepos```
+- ```cd GitRepos```
+- ```git clone https://github.com/michaelkemp/aws-bootcamp-bastion.git```
+- ```cd aws-bootcamp-bastion```
+- ```code .```
+- Edit bastion\terraform.tfvars
+    - This file contains the VPC-ID and Subnet-ID (Public) that the Bastion Server (and Security groups) will be created in
+    - Change the *prefix* value to your own NetId (or something memorable)
+    - Change the non standard port that you would like to SSH into (rather than using port 22) 
+- Edit infrastructure\terraform.tfvars
+    - This file contains the VPC-ID and Subnet-ID (Public) that the Bastion Server (and Security groups) will be created in;
+    - it also contains the Subnet-IDs that the test infrastructure will be created in (Private and Data) 
+    - Change the *prefix* value to your own NetId (or something memorable)
+    - Change the non standard port that you would like to SSH into (rather than using port 22) 
 
-    - To Terraform test infrastructure and a bastion server that is connected to the infrastructure
-        - ```cd infrastructure```
-        - ```terraform init```
-        - ```terraform apply```
-        - Accept the changes ```yes```
-        - Once the Infrastructure is Terraformed
-            - Change the security on your PEM file
-                - ```chmod 400 prefix-infrastructure-key.pem```
-            - SSH to your Bastion Server and accept the Certificate
-                - ```ssh -p 22222 ec2-user@123.123.123.123 -i prefix-infrastructure-key.pem```
-            - Use the terraform outputs to create tunnels to the test infrastructure
-                - ```ssh -p 22222 -N -L 13306:mysql.endpoint:3306 ec2-user@123.123.123.123 -i prefix-infrastructure-key.pem```
+- To Terraform test infrastructure and a bastion server that is connected to the infrastructure
+    - ```cd infrastructure```
+    - ```terraform init```
+    - ```terraform apply```
+    - Accept the changes ```yes```
+    - Once the Infrastructure is Terraformed
+        - Change the security on your PEM file
+            - ```chmod 400 prefix-infrastructure-key.pem```
+        - SSH to your Bastion Server and accept the Certificate
+            - ```ssh -p 22222 ec2-user@123.123.123.123 -i prefix-infrastructure-key.pem```
+        - Use the terraform outputs to create tunnels to the test infrastructure
+            - ```ssh -p 22222 -N -L 13306:mysql.endpoint:3306 ec2-user@123.123.123.123 -i prefix-infrastructure-key.pem```
 
-    - To Terraform just a bastion, which you will attach to existing infrastructure
-        - ```cd bastion```
-        - ```terraform init```
-        - ```terraform apply```
-        - Accept the changes ```yes```
-        - Once the Infrastructure is Terraformed
-            - In the console, attach the created security groups to your infrastructure
-            - note the IP addresses or endpoints of your infrastructure
-            - Change the security on your PEM file
-                - ```chmod 400 prefix-infrastructure-key.pem```
-            - SSH to your Bastion Server and accept the Certificate
-                - ```ssh -p 22222 ec2-user@123.123.123.123 -i prefix-infrastructure-key.pem```
-            - Use the terraform outputs to create tunnels to the test infrastructure
-                - ```ssh -p 22222 -N -L 13306:mysql.endpoint:3306 ec2-user@123.123.123.123 -i prefix-infrastructure-key.pem```
+- To Terraform just a bastion, which you will attach to existing infrastructure
+    - ```cd bastion```
+    - ```terraform init```
+    - ```terraform apply```
+    - Accept the changes ```yes```
+    - Once the Infrastructure is Terraformed
+        - In the console, attach the created security groups to your infrastructure
+        - note the IP addresses or endpoints of your infrastructure
+        - Change the security on your PEM file
+            - ```chmod 400 prefix-infrastructure-key.pem```
+        - SSH to your Bastion Server and accept the Certificate
+            - ```ssh -p 22222 ec2-user@123.123.123.123 -i prefix-infrastructure-key.pem```
+        - Use the terraform outputs to create tunnels to the test infrastructure
+            - ```ssh -p 22222 -N -L 13306:mysql.endpoint:3306 ec2-user@123.123.123.123 -i prefix-infrastructure-key.pem```
 
 ## Understanding SSH Tunnels
 
-    - [Tunneling](https://www.ssh.com/ssh/tunneling/example) example
-    - The ```ssh -L``` command forwards a port on Your Machine throught your Bastion Server, to a remote machine.
-    - You generally don't use the standard port the your end, in case you have something running on this port already.
-    - Examples:
-        - ssh to my AWS Linux bastion running at ec2-44-144-44-144.us-west-2.compute.amazonaws.com with my key.pem
-            - ```ssh ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com -i key.pem```
-        - ssh to the sam machine on a non standard port 22222 (not port 22)
-            - ```ssh -p 22222 ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com -i key.pem```
+- [Tunneling](https://www.ssh.com/ssh/tunneling/example) example
+- The ```ssh -L``` command forwards a port on Your Machine throught your Bastion Server, to a remote machine.
+- You generally don't use the standard port the your end, in case you have something running on this port already.
+- Examples:
+    - ssh to my AWS Linux bastion running at ec2-44-144-44-144.us-west-2.compute.amazonaws.com with my key.pem
+        - ```ssh ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com -i key.pem```
+    - ssh to the sam machine on a non standard port 22222 (not port 22)
+        - ```ssh -p 22222 ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com -i key.pem```
         
 
