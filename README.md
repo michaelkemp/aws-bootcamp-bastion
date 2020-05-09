@@ -58,7 +58,7 @@
     - ```terraform init```
     - ```terraform apply```
     - Accept the changes ```yes```
-    - Once the Infrastructure is Terraformed
+    - Once the Infrastructure is terraformed
         - Change the security on your PEM file
             - ```chmod 400 prefix-infrastructure-key.pem```
             - note the IP addresses or endpoints of your infrastructure
@@ -69,14 +69,14 @@
     - ```terraform init```
     - ```terraform apply```
     - Accept the changes ```yes```
-    - Once the Infrastructure is Terraformed
+    - Once the Bastion is terraformed
         - In the console, attach the created security groups to your infrastructure
         - Change the security on your PEM file
             - ```chmod 400 prefix-infrastructure-key.pem```
-        - SSH to your Bastion Server and accept the Certificate
-            - ```ssh -i prefix-bastion-key.pem -p 22222 ec2-user@123.123.123.123```
+        - SSH to your Bastion Server and accept the certificate
+            - ```ssh -i prefix-bastion-key.pem -p 22222 ec2-user@44.144.44.144```
         - Use the terraform outputs to create tunnels to the test infrastructure
-            - ```ssh -i prefix-bastion-key.pem -p 22222 -N -L 13306:mysql.endpoint:3306 ec2-user@123.123.123.123```
+            - ```ssh -i prefix-bastion-key.pem -p 22222 -N -L 13306:mysql.endpoint:3306 ec2-user@44.144.44.144```
 
 ## Understanding SSH Tunnels
 
@@ -96,3 +96,9 @@
                 - ssh -i kempy2-bastion-key.pem -p 22222 -N -L **13306**:the.remote.mysql.amazon.com:3306 ec2-user@44.144.44.144
             - to remote server, remote port 3306: 
                 - ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:**the.remote.mysql.amazon.com:3306** ec2-user@44.144.44.144 
+
+- Connect to your infrastructure as if it is running locally - 127.0.0.1
+    - ```ssh -i kempy-infrastructure-key.pem -p 11122 ubuntu@127.0.0.1```
+    - ```ssh -i kempy-infrastructure-key.pem -p 11122 ec2-user@127.0.0.1```
+    - ```mysql --host=127.0.0.1 --port=13306 -uusername -ppassword```
+
