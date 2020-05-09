@@ -17,11 +17,6 @@ variable "vpc_id" {
   default = ""
 }
 
-variable "public_subnet" {
-  type    = string
-  default = ""
-}
-
 variable "private_subnet" {
   type    = string
   default = ""
@@ -30,18 +25,6 @@ variable "private_subnet" {
 variable "data_subnets" {
   type    = list(string)
   default = []
-}
-
-variable "ssh_port" {
-  type    = number
-  default = 22
-}
-
-######################################################################################################################################################################
-# Get My IP Address
-######################################################################################################################################################################
-data "external" "ipify" {
-  program = ["curl", "-s", "https://api.ipify.org?format=json"]
 }
 
 ######################################################################################################################################################################
@@ -60,6 +43,68 @@ resource "local_file" "write-key" {
   filename = "${path.module}/${var.prefix}-infrastructure-key.pem"
 }
 
+######################################################################################################################################################################
+# Security Groups
+######################################################################################################################################################################
+resource "aws_security_group" "SSH_security_group" {
+  name        = "${var.prefix}_SSH"
+  description = "SSH Security Group"
+  vpc_id      = var.vpc_id
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "TCP"
+    self        = true
+    description = "Self Referencing"
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "RDP_security_group" {
+  name        = "${var.prefix}_RDP"
+  description = "RDP Security Group"
+  vpc_id      = var.vpc_id
+  ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = "TCP"
+    self        = true
+    description = "Self Referencing"
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "MYSQL_security_group" {
+  name        = "${var.prefix}_MYSQL"
+  description = "MYSQL Security Group"
+  vpc_id      = var.vpc_id
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "TCP"
+    self        = true
+    description = "Self Referencing"
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+
 # Find image with AMI: aws ec2 describe-images --image-ids ami-003634241a8fcdec0
 ######################################################################################################################################################################
 # Retrieve the AMI ID for the most recent Amazon Linux 2 image 
@@ -74,142 +119,6 @@ data "aws_ami" "amazon-linux-2" {
   filter {
     name   = "name"
     values = ["amzn2-ami-hvm*"]
-  }
-}
-
-######################################################################################################################################################################
-# Security Group to attach to the Bastion Server - External SSH Traffic on an obscure port 
-######################################################################################################################################################################
-resource "aws_security_group" "bastion_security_group" {
-  name        = "${var.prefix}_bastion_security_group"
-  description = "Security Group for Bastion"
-  vpc_id      = var.vpc_id
-  ingress {
-    from_port   = var.ssh_port
-    to_port     = var.ssh_port
-    protocol    = "TCP"
-    cidr_blocks = ["${data.external.ipify.result.ip}/32"]
-    description = "SSH Ingress"
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-######################################################################################################################################################################
-# BASTION - Create an EC2 Instance in the Public Subnet using the Amazon Linux 2 AMI 
-######################################################################################################################################################################
-resource "aws_instance" "bastion" {
-  ami           = data.aws_ami.amazon-linux-2.id
-  instance_type = "t2.micro"
-  tags = {
-    Name = "${var.prefix}-Bastion"
-  }
-  subnet_id                   = var.public_subnet
-  associate_public_ip_address = true
-  key_name                    = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids      = [aws_security_group.bastion_security_group.id]
-  user_data                   = <<-EOF
-    #!/bin/bash
-    sudo yum update -y && sudo yum upgrade -y
-    sudo sed -i 's/#Port 22/Port ${var.ssh_port}/g' /etc/ssh/sshd_config
-    sudo service sshd restart
-    sudo yum install mysql -y 
-  EOF
-}
-
-######################################################################################################################################################################
-# Security Group to allow the SSH from the Bastion
-######################################################################################################################################################################
-resource "aws_security_group" "ssh_from_bastion" {
-  name        = "${var.prefix}_ssh_from_bastion"
-  description = "SSH from Bastion"
-  vpc_id      = var.vpc_id
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "TCP"
-    cidr_blocks = ["${aws_instance.bastion.private_ip}/32"]
-    description = "Bastion Security Group"
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-######################################################################################################################################################################
-# Security Group to allow the RDP from the Bastion 
-######################################################################################################################################################################
-resource "aws_security_group" "rdp_from_bastion" {
-  name        = "${var.prefix}_rdp_from_bastion"
-  description = "RDP from Bastion"
-  vpc_id      = var.vpc_id
-  ingress {
-    from_port   = 3389
-    to_port     = 3389
-    protocol    = "TCP"
-    cidr_blocks = ["${aws_instance.bastion.private_ip}/32"]
-    description = "Bastion Security Group"
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-######################################################################################################################################################################
-# Security Group to allow the MySQL from the Bastion
-######################################################################################################################################################################
-resource "aws_security_group" "mysql_from_bastion" {
-  name        = "${var.prefix}_mysql_from_bastion"
-  description = "MySQL from Bastion"
-  vpc_id      = var.vpc_id
-  ingress {
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "TCP"
-    cidr_blocks = ["${aws_instance.bastion.private_ip}/32"]
-    description = "Bastion Security Group"
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-
-######################################################################################################################################################################
-######################################################################################################################################################################
-#
-#              Create Infrastructure Ubuntu Linux, Windows 2019, and MySQL Infrastructure to connect to via the Bastion 
-#
-######################################################################################################################################################################
-######################################################################################################################################################################
-
-
-######################################################################################################################################################################
-# Retrieve the AMI ID for the most recent Microsoft Windows image 
-######################################################################################################################################################################
-data "aws_ami" "microsoft-windows" {
-  most_recent = true
-  owners      = ["amazon"]
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-  filter {
-    name   = "name"
-    values = ["Windows_Server-2019-English-Full-Base*"]
   }
 }
 
@@ -230,6 +139,52 @@ data "aws_ami" "ubuntu-linux" {
 }
 
 ######################################################################################################################################################################
+# Retrieve the AMI ID for the most recent Microsoft Windows image 
+######################################################################################################################################################################
+data "aws_ami" "microsoft-windows" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+  filter {
+    name   = "name"
+    values = ["Windows_Server-2019-English-Full-Base*"]
+  }
+}
+
+######################################################################################################################################################################
+# Test Amazon Linux Server - Create an EC2 image in the Private Subnet using the Amazon Linux 2 AMI
+######################################################################################################################################################################
+resource "aws_instance" "linux" {
+  ami           = data.aws_ami.amazon-linux-2.id
+  instance_type = "t2.micro"
+  tags = {
+    Name = "${var.prefix}-Amazon-Linux-2"
+  }
+  subnet_id                   = var.private_subnet
+  associate_public_ip_address = false
+  key_name                    = aws_key_pair.generated_key.key_name
+  vpc_security_group_ids      = [aws_security_group.SSH_security_group.id]
+}
+
+######################################################################################################################################################################
+# Test Ubuntu Server - Create an EC2 image in the Private Subnet using the Ubuntu Linux AMI
+######################################################################################################################################################################
+resource "aws_instance" "ubuntu" {
+  ami           = data.aws_ami.ubuntu-linux.id
+  instance_type = "t2.micro"
+  tags = {
+    Name = "${var.prefix}-Ubuntu"
+  }
+  subnet_id                   = var.private_subnet
+  associate_public_ip_address = false
+  key_name                    = aws_key_pair.generated_key.key_name
+  vpc_security_group_ids      = [aws_security_group.SSH_security_group.id]
+}
+
+######################################################################################################################################################################
 # Test Windows Server - Create an EC2 Instance in the Private Subnet using the Microsoft Windows Server 2019 AMI
 ######################################################################################################################################################################
 resource "aws_instance" "windows" {
@@ -241,23 +196,8 @@ resource "aws_instance" "windows" {
   subnet_id                   = var.private_subnet
   associate_public_ip_address = false
   key_name                    = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids      = [aws_security_group.rdp_from_bastion.id]
+  vpc_security_group_ids      = [aws_security_group.RDP_security_group.id]
   get_password_data           = true
-}
-
-######################################################################################################################################################################
-# Test Ubuntu Server - Create an EC2 image in the Private Subnet using the Ubuntu Linux 2 AMI
-######################################################################################################################################################################
-resource "aws_instance" "ubuntu" {
-  ami           = data.aws_ami.ubuntu-linux.id
-  instance_type = "t2.micro"
-  tags = {
-    Name = "${var.prefix}-Ubuntu"
-  }
-  subnet_id                   = var.private_subnet
-  associate_public_ip_address = false
-  key_name                    = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids      = [aws_security_group.ssh_from_bastion.id]
 }
 
 ######################################################################################################################################################################
@@ -286,7 +226,7 @@ resource "aws_db_instance" "mysql" {
   username               = "admin"
   password               = random_password.rds-password.result
   db_subnet_group_name   = aws_db_subnet_group.mysql-rds-subnet-group.name
-  vpc_security_group_ids = [aws_security_group.mysql_from_bastion.id]
+  vpc_security_group_ids = [aws_security_group.MYSQL_security_group.id]
 }
 resource "aws_ssm_parameter" "mysql-password" {
   name      = "${var.prefix}-mysql-password"
@@ -299,32 +239,31 @@ resource "aws_ssm_parameter" "mysql-password" {
 # Outputs detailing SSH Tunnel Strings 
 ######################################################################################################################################################################
 
-output "bastion" {
+output "information" {
   value = <<-EOF
 
     chmod 400 ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    mysql --host=${aws_db_instance.mysql.address} -uadmin -p${random_password.rds-password.result}
-    aws ec2 get-password-data --instance-id ${aws_instance.windows.id} --priv-launch-key ${aws_key_pair.generated_key.key_name}.pem
 
-  EOF
-}
+    # IPs and Endpoints
+    # Amazon Linux: ${aws_instance.linux.private_ip}
+    # Ubuntu Linux: ${aws_instance.ubuntu.private_ip}
+    # Windows Srvr: ${aws_instance.windows.private_ip}
+    # MySQL Server: ${aws_db_instance.mysql.address}
 
-output "ssh-tunnels" {
-  value = <<-EOF
-
-    ssh -p ${var.ssh_port} -N -L 13389:${aws_instance.windows.private_ip}:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p ${var.ssh_port} -N -L 11122:${aws_instance.ubuntu.private_ip}:22 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p ${var.ssh_port} -N -L 13306:${aws_db_instance.mysql.address}:3306 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-
-  EOF
-}
-
-output "through-bastion" {
-  value = <<-EOF
-
+    # SSH to Linux Servers through SSH Tunnel
     ssh -i ${aws_key_pair.generated_key.key_name}.pem -p 11122 ubuntu@127.0.0.1
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p 11122 ec2-user@127.0.0.1
+
+    # MySql through SSH Tunnel
     mysql --host=127.0.0.1 --port=13306 -uadmin -p${random_password.rds-password.result}
+
+    # Windows RDS through SSH Tunnel
+    Address: 127.0.0.1:13389
+    Username: Administrator
+    Password: [see below]
+
+    # Get Windows Password
+    aws ec2 get-password-data --instance-id ${aws_instance.windows.id} --priv-launch-key ${aws_key_pair.generated_key.key_name}.pem
 
   EOF
 }

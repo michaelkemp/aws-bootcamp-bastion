@@ -225,23 +225,19 @@ resource "aws_security_group" "mssql_from_bastion" {
 # Outputs detailing SSH Tunnel Strings 
 ######################################################################################################################################################################
 
-output "bastion" {
+output "information" {
   value = <<-EOF
 
+    # Change key security and log into Bastion
     chmod 400 ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_dns}
 
-  EOF
-}
-
-output "ssh-tunnels" {
-  value = <<-EOF
-
-    ssh -p ${var.ssh_port} -N -L 13389:[WINDOWS-IP]:3389 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p ${var.ssh_port} -N -L 11122:[UBUNTU-IP]:22 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p ${var.ssh_port} -N -L 13306:[MYSQL-ENDPOINT]:3306 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p ${var.ssh_port} -N -L 15432:[POSTGRESQL-ENDPOINT]:5432 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
-    ssh -p ${var.ssh_port} -N -L 11433:[MSSQL-ENDPOINT]:1433 ec2-user@${aws_instance.bastion.public_dns} -i ${aws_key_pair.generated_key.key_name}.pem
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 11122:[AMAZON-LINUX-IP]:22 ec2-user@${aws_instance.bastion.public_dns}
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 11122:[UBUNTU-IP]:22 ec2-user@${aws_instance.bastion.public_dns}
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 13389:[WINDOWS-IP]:3389 ec2-user@${aws_instance.bastion.public_dns}
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 13306:[MYSQL-ENDPOINT]:3306 ec2-user@${aws_instance.bastion.public_dns}
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 15432:[POSTGRESQL-ENDPOINT]:5432 ec2-user@${aws_instance.bastion.public_dns}
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 11433:[MSSQL-ENDPOINT]:1433 ec2-user@${aws_instance.bastion.public_dns}
 
   EOF
 }
