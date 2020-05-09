@@ -94,6 +94,6 @@
             - Connect through the bastion: 
             - **ssh -i kempy2-bastion-key.pem -p 22222 -N -L** 13306:the.remote.mysql.amazon.com:3306 **ec2-user\@ec2-44-144-44-144.us-west-2.compute.amazonaws.com**
             - Local port 13306: 
-            - ssh -i kempy2-bastion-key.pem -p 22222 -N -L **13306**:the.remote.mysql.amazon.com:3306 ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com
+            - ssh -i kempy2-bastion-key.pem -p 22222 -N -L **13306**:the.remote.mysql.amazon.com:3306 ec2-user\@ec2-44-144-44-144.us-west-2.compute.amazonaws.com
             - Remote Server, remote port 3306: 
-            - ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:**the.remote.mysql.amazon.com:3306** ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com 
+            - ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:**the.remote.mysql.amazon.com:3306** ec2-user\@ec2-44-144-44-144.us-west-2.compute.amazonaws.com 
