@@ -30,8 +30,7 @@
             if [ -d "$HOME/.local/bin" ] ; then
                 PATH="$HOME/.local/bin:$PATH"
             fi
-        source .bashrc
-    ```
+        source .bashrc```
 - Install [Terraform](https://www.terraform.io/downloads.html)
     - ```curl "https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip" -o "terraform.zip"```
     - ```unzip terraform.zip```
