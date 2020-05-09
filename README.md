@@ -86,14 +86,14 @@
 - You generally don't use the standard port the your end of the tunnel, in case you already have something running on this port.
 - Examples:
     - ssh to my AWS Linux bastion running at ec2-44-144-44-144.us-west-2.compute.amazonaws.com with my key.pem
-        - ```ssh -i key.pem ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com```
+        - ```ssh -i key.pem ec2-user@44.144.44.144```
     - ssh to the same machine on a non standard port 22222 (not port 22) - *the machine must be setup to listen/respond on the non standard port*
-        - ```ssh -i key.pem -p 22222 ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com```
+        - ```ssh -i key.pem -p 22222 ec2-user@44.144.44.144```
     - create a tunnel from my Local Machine on port 13006 through the Bastion to a remote MySQL Server (the.remote.mysql.amazon.com) on port 3306
-        - ```ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:the.remote.mysql.amazon.com:3306 ec2-user@ec2-44-144-44-144.us-west-2.compute.amazonaws.com```     
+        - ```ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:the.remote.mysql.amazon.com:3306 ec2-user@44.144.44.144```     
             - Connect through the bastion: 
             - **ssh -i kempy2-bastion-key.pem -p 22222 -N -L** 13306:the.remote.mysql.amazon.com:3306 **ec2-user@44.144.44.144**
             - Local port 13306: 
-            - ssh -i kempy2-bastion-key.pem -p 22222 -N -L **13306**:the.remote.mysql.amazon.com:3306 ec2-user\@ec2-44-144-44-144.us-west-2.compute.amazonaws.com
+            - ssh -i kempy2-bastion-key.pem -p 22222 -N -L **13306**:the.remote.mysql.amazon.com:3306 ec2-user@44.144.44.144
             - Remote Server, remote port 3306: 
-            - ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:**the.remote.mysql.amazon.com:3306** ec2-user\@ec2-44-144-44-144.us-west-2.compute.amazonaws.com 
+            - ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:**the.remote.mysql.amazon.com:3306** ec2-user@44.144.44.144 
