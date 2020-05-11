@@ -13,9 +13,9 @@
         - ```code .```
 
 
-## Install aws command line tool, BYU's awslogin, and terraform
+## Install AWS Commandline Tool, BYU's AWSlogin, and Terraform
 
-- Open Ubuntu
+- Open (WSL) Ubuntu
 - Add pip3 and unzip
     - ```sudo apt install unzip```
     - ```sudo apt install python3-pip```
