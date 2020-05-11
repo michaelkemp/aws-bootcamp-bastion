@@ -13,7 +13,7 @@
         - ```code .```
 
 
-## Install AWS Commandline Tool, BYU's AWSlogin, and Terraform
+## Install AWS Command Line Tool, BYU's AWSlogin, and Terraform
 
 - Open (WSL) Ubuntu
 - Add pip3 and unzip
@@ -41,11 +41,11 @@
 
 ## BYU Training Account
 
-    - To request access to the BYU Training account, visit [https://go.byu.edu/AWSTrainingAccountRequest](https://go.byu.edu/AWSTrainingAccountRequest)
-        - Although the training account is nuked weekly, it is kind to clean up (delete) your infrastructure after you have finished with it.
-    - Use BYU's commandline ```awslogin``` tool to connect via the command line, or got to [https://awslogin.byu.edu/](https://awslogin.byu.edu/) to log in via the console.
-    - Command line example:
-        - ```awslogin --account byu-org-trn --role PowerUser```
+- To request access to the BYU Training account, visit [https://go.byu.edu/AWSTrainingAccountRequest](https://go.byu.edu/AWSTrainingAccountRequest)
+    - Although the training account is nuked weekly, it is kind to clean up (delete) your infrastructure after you have finished with it.
+- Use BYU's commandline ```awslogin``` tool to connect via the command line, or got to [https://awslogin.byu.edu/](https://awslogin.byu.edu/) to log in via the console.
+- Command line example:
+    - ```awslogin --account byu-org-trn --role PowerUser```
 
 
 ## Terraform Infrastructure and Bastion Server 
