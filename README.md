@@ -57,7 +57,7 @@
 - ```code .```
 
 - Edit infrastructure\terraform.tfvars
-    - This file contains the VPC-ID and Subnet-IDs (Private and Data) that the test infrastructure will be created in  
+    - This file contains the VPC-ID and Subnet-IDs (Private and Data) that the test infrastructure will be created in 
     - Change the *prefix* value to your own NetId (or something memorable)
 
 - Edit bastion\terraform.tfvars
@@ -85,7 +85,7 @@
     - Once the Bastion is terraformed
         - In the console, attach the created security groups to your infrastructure
         - Change the security on your PEM file
-            - ```chmod 400 prefix-infrastructure-key.pem```
+            - ```chmod 400 prefix-bastion-key.pem```
         - SSH to your Bastion Server and accept the certificate
             - ```ssh -i prefix-bastion-key.pem -p 22222 ec2-user@44.144.44.144```
         - Use the terraform outputs to create tunnels to the test infrastructure
