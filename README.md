@@ -1,5 +1,6 @@
 # aws-bootcamp-bastion
 
+
 ## Set Up Windows with Windows Subsystem for Linux (WSL)
 
 - Enable [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
@@ -10,6 +11,7 @@
 - Connect VSCode to WSL
     - Open Ubuntu and run the command 
         - ```code .```
+
 
 ## Install aws command line tool, BYU's awslogin, and terraform
 
@@ -36,7 +38,17 @@
     - ```unzip terraform.zip```
     - ```mv terraform .local/bin/terraform```
 
-## Terraform Bastion Infrastructure 
+
+## BYU Training Account
+
+    - To request access to the BYU Training account, visit [https://go.byu.edu/AWSTrainingAccountRequest](https://go.byu.edu/AWSTrainingAccountRequest)
+        - Although the training account is nuked weekly, it is kind to clean up (delete) your infrastructure after you have finished with it.
+    - Use BYU's commandline ```awslogin``` tool to connect via the command line, or got to [https://awslogin.byu.edu/](https://awslogin.byu.edu/) to log in via the console.
+    - Command line example:
+        - ```awslogin --account byu-org-trn --role PowerUser```
+
+
+## Terraform Infrastructure and Bastion Server 
 
 - ```mkdir GitRepos```
 - ```cd GitRepos```
@@ -63,6 +75,7 @@
             - ```chmod 400 prefix-infrastructure-key.pem```
             - note the IP addresses or endpoints of your infrastructure
     - Terraform will build a MySQL Database in the Data Subnet, and 3 EC2 Instances in the Private Subnet
+    - Once we are finished, use ```terraform destroy``` to remove remove the infrastructure.
 
 - To *Terraform* the Bastion Server
     - ```cd aws-bootcamp-bastion/bastion```
@@ -76,29 +89,33 @@
         - SSH to your Bastion Server and accept the certificate
             - ```ssh -i prefix-bastion-key.pem -p 22222 ec2-user@44.144.44.144```
         - Use the terraform outputs to create tunnels to the test infrastructure
-            - ```ssh -i prefix-bastion-key.pem -p 22222 -N -L 13306:mysql.endpoint:3306 ec2-user@44.144.44.144```
+            - ```ssh -i prefix-bastion-key.pem -p 22222 ec2-user@44.144.44.144 -N -L 13306:mysql.endpoint:3306```
+            - ```ssh -i prefix-bastion-key.pem -p 22222 ec2-user@44.144.44.144 -N -L 11122:linux.endpoint:22```
+            - ```ssh -i prefix-bastion-key.pem -p 22222 ec2-user@44.144.44.144 -N -L 13389:windows.endpoint:3389```
+    - Once we are finished, detach the security groups, and use ```terraform destroy``` to remove remove the bastion.
+
 
 ## Understanding SSH Tunnels
 
 - [Tunneling](https://www.ssh.com/ssh/tunneling/example) example
-- The ```ssh -L``` command forwards a port on Your Machine throught your Bastion Server, to a remote machine.
-- You generally don't use the standard port the your end of the tunnel, in case you already have something running on this port.
+- The ```ssh -L``` command forwards a port on **your machine** throught your **bastion server**, to a **remote machine**.
+- You generally don't use the standard port the your end of the tunnel, in case you already have something listening on this port.
 - Examples:
-    - ssh to my AWS Linux bastion running at ec2-44-144-44-144.us-west-2.compute.amazonaws.com with my key.pem
-        - ```ssh -i key.pem ec2-user@44.144.44.144```
+    - To ssh to an AWS Linux bastion running at 44.144.44.144 with key bastion-key.pem
+        - ```ssh -i bastion-key.pem ec2-user@44.144.44.144```
     - ssh to the same machine on a non standard port 22222 (not port 22) - *the machine must be setup to listen/respond on the non standard port*
-        - ```ssh -i key.pem -p 22222 ec2-user@44.144.44.144```
-    - create a tunnel from my Local Machine on port 13006 through the Bastion to a remote MySQL Server (the.remote.mysql.amazon.com) on port 3306
-        - ```ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:the.remote.mysql.amazon.com:3306 ec2-user@44.144.44.144```     
-            - Tunnel through the bastion: 
-                - **ssh -i kempy2-bastion-key.pem -p 22222 -N -L** 13306:the.remote.mysql.amazon.com:3306 **ec2-user@44.144.44.144**
-            - from local port 13306: 
-                - ssh -i kempy2-bastion-key.pem -p 22222 -N -L **13306**:the.remote.mysql.amazon.com:3306 ec2-user@44.144.44.144
-            - to remote server, remote port 3306: 
-                - ssh -i kempy2-bastion-key.pem -p 22222 -N -L 13306:**the.remote.mysql.amazon.com:3306** ec2-user@44.144.44.144 
+        - ```ssh -i bastion-key.pem -p 22222 ec2-user@44.144.44.144```
+    - create a tunnel from the **local machine** on port 13006 through the **bastion** to a remote MySQL Server (remote.mysql.amazon.com) on port 3306
+        - ```ssh -i bastion-key.pem -p 22222 ec2-user@44.144.44.144 -N -L 13306:the.remote.mysql.amazon.com:3306```     
+            - Tunnel through the bastion 
+                - **ssh -i bastion-key.pem -p 22222 ec2-user@44.144.44.144 -N -L** 13306:remote.mysql.amazon.com:3306
+            - from local port
+                - ssh -i bastion-key.pem -p 22222 ec2-user@44.144.44.144 -N -L **13306**:remote.mysql.amazon.com:3306
+            - to remote server:remote port
+                - ssh -i bastion-key.pem -p 22222 ec2-user@44.144.44.144 -N -L 13306:**remote.mysql.amazon.com:3306** 
 
-- Connect to your infrastructure as if it is running locally - 127.0.0.1
-    - ```ssh -i kempy-infrastructure-key.pem -p 11122 ubuntu@127.0.0.1```
-    - ```ssh -i kempy-infrastructure-key.pem -p 11122 ec2-user@127.0.0.1```
-    - ```mysql --host=127.0.0.1 --port=13306 -uusername -ppassword```
+- With a tunnel running, connect to the infrastructure as if it is running locally - 127.0.0.1
+    - ```mysql --host=127.0.0.1 --port=13306 -u username -p password```
+    - ```ssh -i infrastructure-key.pem -p 11122 ubuntu@127.0.0.1```
+    - ```ssh -i infrastructure-key.pem -p 11122 ec2-user@127.0.0.1```
 

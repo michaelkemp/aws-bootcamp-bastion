@@ -24,7 +24,7 @@ variable "public_subnet" {
 
 variable "ssh_port" {
   type    = number
-  default = 22
+  default = 22222
 }
 
 ######################################################################################################################################################################
@@ -50,25 +50,8 @@ resource "local_file" "write-key" {
   filename = "${path.module}/${var.prefix}-bastion-key.pem"
 }
 
-# Find image with AMI: aws ec2 describe-images --image-ids ami-003634241a8fcdec0
 ######################################################################################################################################################################
-# Retrieve the AMI ID for the most recent Amazon Linux 2 image 
-######################################################################################################################################################################
-data "aws_ami" "amazon-linux-2" {
-  most_recent = true
-  owners      = ["amazon"]
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm*"]
-  }
-}
-
-######################################################################################################################################################################
-# Security Group to attach to the Bastion Server - External SSH Traffic on an obscure port 
+# Security Group to attach to the Bastion Server - External SSH Traffic on an OBSCURE port - Allow traffic from My IP Address 
 ######################################################################################################################################################################
 resource "aws_security_group" "bastion_security_group" {
   name        = "${var.prefix}_bastion_security_group"
@@ -92,6 +75,18 @@ resource "aws_security_group" "bastion_security_group" {
 ######################################################################################################################################################################
 # BASTION - Create an EC2 Instance in the Public Subnet using the Amazon Linux 2 AMI 
 ######################################################################################################################################################################
+data "aws_ami" "amazon-linux-2" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm*"]
+  }
+}
 resource "aws_instance" "bastion" {
   ami           = data.aws_ami.amazon-linux-2.id
   instance_type = "t2.micro"
@@ -112,10 +107,10 @@ resource "aws_instance" "bastion" {
 }
 
 ######################################################################################################################################################################
-# Security Group to allow the SSH from the Bastion
+# Security Groups to allow access from the Bastion
 ######################################################################################################################################################################
 resource "aws_security_group" "ssh_from_bastion" {
-  name        = "${var.prefix}_ssh_from_bastion"
+  name        = "${var.prefix}_SSH_FROM_BASTION"
   description = "SSH from Bastion"
   vpc_id      = var.vpc_id
   ingress {
@@ -133,11 +128,8 @@ resource "aws_security_group" "ssh_from_bastion" {
   }
 }
 
-######################################################################################################################################################################
-# Security Group to allow the RDP from the Bastion 
-######################################################################################################################################################################
 resource "aws_security_group" "rdp_from_bastion" {
-  name        = "${var.prefix}_rdp_from_bastion"
+  name        = "${var.prefix}_RDP_FROM_BASTION"
   description = "RDP from Bastion"
   vpc_id      = var.vpc_id
   ingress {
@@ -155,11 +147,8 @@ resource "aws_security_group" "rdp_from_bastion" {
   }
 }
 
-######################################################################################################################################################################
-# Security Group to allow the MySQL from the Bastion
-######################################################################################################################################################################
 resource "aws_security_group" "mysql_from_bastion" {
-  name        = "${var.prefix}_mysql_from_bastion"
+  name        = "${var.prefix}_MYSQL_FROM_BASTION"
   description = "MySQL from Bastion"
   vpc_id      = var.vpc_id
   ingress {
@@ -177,11 +166,8 @@ resource "aws_security_group" "mysql_from_bastion" {
   }
 }
 
-######################################################################################################################################################################
-# Security Group to allow the PostgreSQL from the Bastion
-######################################################################################################################################################################
 resource "aws_security_group" "postgresql_from_bastion" {
-  name        = "${var.prefix}_postgresql_from_bastion"
+  name        = "${var.prefix}_POSTGRESQL_FROM_BASTION"
   description = "PostgreSQL from Bastion"
   vpc_id      = var.vpc_id
   ingress {
@@ -199,11 +185,8 @@ resource "aws_security_group" "postgresql_from_bastion" {
   }
 }
 
-######################################################################################################################################################################
-# Security Group to allow the MSSQL from the Bastion
-######################################################################################################################################################################
 resource "aws_security_group" "mssql_from_bastion" {
-  name        = "${var.prefix}_mssql_from_bastion"
+  name        = "${var.prefix}_MSSQL_FROM_BASTION"
   description = "MSSQL from Bastion"
   vpc_id      = var.vpc_id
   ingress {
@@ -224,20 +207,19 @@ resource "aws_security_group" "mssql_from_bastion" {
 ######################################################################################################################################################################
 # Outputs detailing SSH Tunnel Strings 
 ######################################################################################################################################################################
-
 output "information" {
   value = <<-EOF
 
     # Change key security and log into Bastion
     chmod 400 ${aws_key_pair.generated_key.key_name}.pem
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_dns}
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip}
 
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 11122:[AMAZON-LINUX-IP]:22 ec2-user@${aws_instance.bastion.public_dns}
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 11122:[UBUNTU-IP]:22 ec2-user@${aws_instance.bastion.public_dns}
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 13389:[WINDOWS-IP]:3389 ec2-user@${aws_instance.bastion.public_dns}
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 13306:[MYSQL-ENDPOINT]:3306 ec2-user@${aws_instance.bastion.public_dns}
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 15432:[POSTGRESQL-ENDPOINT]:5432 ec2-user@${aws_instance.bastion.public_dns}
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} -N -L 11433:[MSSQL-ENDPOINT]:1433 ec2-user@${aws_instance.bastion.public_dns}
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 11122:[AMAZON-LINUX-IP]:22
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 11122:[UBUNTU-IP]:22
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 13389:[WINDOWS-IP]:3389
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 13306:[MYSQL-ENDPOINT]:3306
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 15432:[POSTGRESQL-ENDPOINT]:5432
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 11433:[MSSQL-ENDPOINT]:1433
 
   EOF
 }

@@ -103,13 +103,10 @@ resource "aws_security_group" "MYSQL_security_group" {
   }
 }
 
-
-
-# Find image with AMI: aws ec2 describe-images --image-ids ami-003634241a8fcdec0
 ######################################################################################################################################################################
-# Retrieve the AMI ID for the most recent Amazon Linux 2 image 
+# Amazon Linux, Ubuntu Linux, and Windows Servers - Create an EC2 Instances in the Private Subnet
 ######################################################################################################################################################################
-data "aws_ami" "amazon-linux-2" {
+data "aws_ami" "amazon-linux" {
   most_recent = true
   owners      = ["amazon"]
   filter {
@@ -121,10 +118,18 @@ data "aws_ami" "amazon-linux-2" {
     values = ["amzn2-ami-hvm*"]
   }
 }
+resource "aws_instance" "linux" {
+  ami           = data.aws_ami.amazon-linux.id
+  instance_type = "t2.micro"
+  tags = {
+    Name = "${var.prefix}-Amazon-Linux"
+  }
+  subnet_id                   = var.private_subnet
+  associate_public_ip_address = false
+  key_name                    = aws_key_pair.generated_key.key_name
+  vpc_security_group_ids      = [aws_security_group.SSH_security_group.id]
+}
 
-######################################################################################################################################################################
-# Retrieve the AMI ID for the most recent Ubuntu Linux image 
-######################################################################################################################################################################
 data "aws_ami" "ubuntu-linux" {
   most_recent = true
   owners      = ["099720109477"]
@@ -137,10 +142,18 @@ data "aws_ami" "ubuntu-linux" {
     values = ["ubuntu/images/hvm-ssd/ubuntu-bionic*"]
   }
 }
+resource "aws_instance" "ubuntu" {
+  ami           = data.aws_ami.ubuntu-linux.id
+  instance_type = "t2.micro"
+  tags = {
+    Name = "${var.prefix}-Ubuntu-Linux"
+  }
+  subnet_id                   = var.private_subnet
+  associate_public_ip_address = false
+  key_name                    = aws_key_pair.generated_key.key_name
+  vpc_security_group_ids      = [aws_security_group.SSH_security_group.id]
+}
 
-######################################################################################################################################################################
-# Retrieve the AMI ID for the most recent Microsoft Windows image 
-######################################################################################################################################################################
 data "aws_ami" "microsoft-windows" {
   most_recent = true
   owners      = ["amazon"]
@@ -153,45 +166,11 @@ data "aws_ami" "microsoft-windows" {
     values = ["Windows_Server-2019-English-Full-Base*"]
   }
 }
-
-######################################################################################################################################################################
-# Test Amazon Linux Server - Create an EC2 image in the Private Subnet using the Amazon Linux 2 AMI
-######################################################################################################################################################################
-resource "aws_instance" "linux" {
-  ami           = data.aws_ami.amazon-linux-2.id
-  instance_type = "t2.micro"
-  tags = {
-    Name = "${var.prefix}-Amazon-Linux-2"
-  }
-  subnet_id                   = var.private_subnet
-  associate_public_ip_address = false
-  key_name                    = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids      = [aws_security_group.SSH_security_group.id]
-}
-
-######################################################################################################################################################################
-# Test Ubuntu Server - Create an EC2 image in the Private Subnet using the Ubuntu Linux AMI
-######################################################################################################################################################################
-resource "aws_instance" "ubuntu" {
-  ami           = data.aws_ami.ubuntu-linux.id
-  instance_type = "t2.micro"
-  tags = {
-    Name = "${var.prefix}-Ubuntu"
-  }
-  subnet_id                   = var.private_subnet
-  associate_public_ip_address = false
-  key_name                    = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids      = [aws_security_group.SSH_security_group.id]
-}
-
-######################################################################################################################################################################
-# Test Windows Server - Create an EC2 Instance in the Private Subnet using the Microsoft Windows Server 2019 AMI
-######################################################################################################################################################################
 resource "aws_instance" "windows" {
   ami           = data.aws_ami.microsoft-windows.id
   instance_type = "t2.large"
   tags = {
-    Name = "${var.prefix}-Windows"
+    Name = "${var.prefix}-Microsoft-Windows"
   }
   subnet_id                   = var.private_subnet
   associate_public_ip_address = false
@@ -236,7 +215,7 @@ resource "aws_ssm_parameter" "mysql-password" {
 }
 
 ######################################################################################################################################################################
-# Outputs detailing SSH Tunnel Strings 
+# Outputs: IP Addresses and Endpoints.
 ######################################################################################################################################################################
 
 output "information" {
@@ -251,9 +230,9 @@ output "information" {
     # MySQL Server: ${aws_db_instance.mysql.address}
 
     # SSH to Linux Servers through SSH Tunnel
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p 11122 ubuntu@127.0.0.1
     ssh -i ${aws_key_pair.generated_key.key_name}.pem -p 11122 ec2-user@127.0.0.1
-
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p 11122 ubuntu@127.0.0.1
+    
     # MySql through SSH Tunnel
     mysql --host=127.0.0.1 --port=13306 -uadmin -p${random_password.rds-password.result}
 
