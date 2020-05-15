@@ -6,10 +6,11 @@
 - Enable [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
     - Open PowerShell as Administrator and run
         - ```Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux```
-- Install Ubuntu from the Microsoft Store
-- Install Visual Studio Code
+- Install *Ubuntu 18.04 LTS* from the Microsoft Store
+    - You will be asked for a Username and Password; this does not need to be the same as your Windows username/password
+- Install [Visual Studio Code](https://code.visualstudio.com/)
 - Connect VSCode to WSL
-    - Open Ubuntu and run the command 
+    - Open Ubuntu and run the command
         - ```code .```
 
 
@@ -37,6 +38,7 @@
     - ```curl "https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip" -o "terraform.zip"```
     - ```unzip terraform.zip```
     - ```mv terraform .local/bin/terraform```
+    - ```terraform --version```
 
 
 ## BYU Training Account
@@ -66,7 +68,7 @@
     - Change the non standard port that you would like to SSH into (rather than using port 22) 
 
 - To *Terraform* Test Infrastructure
-    - ```cd aws-bootcamp-bastion/infrastructure```
+    - ```cd GitRepos/aws-bootcamp-bastion/infrastructure```
     - ```terraform init```
     - ```terraform apply```
     - Accept the changes ```yes```
@@ -78,12 +80,12 @@
     - Once we are finished, use ```terraform destroy``` to remove remove the infrastructure.
 
 - To *Terraform* the Bastion Server
-    - ```cd aws-bootcamp-bastion/bastion```
+    - ```cd GitRepos/aws-bootcamp-bastion/bastion```
     - ```terraform init```
     - ```terraform apply```
     - Accept the changes ```yes```
     - Once the Bastion is terraformed
-        - In the console, attach the created security groups to your infrastructure
+        - In the console, **attach the created security groups** to your infrastructure
         - Change the security on your PEM file
             - ```chmod 400 prefix-bastion-key.pem```
         - SSH to your Bastion Server and accept the certificate
@@ -99,7 +101,8 @@
 
 - [Tunneling](https://www.ssh.com/ssh/tunneling/example) example
 - The ```ssh -L``` command forwards a port on **your machine** throught your **bastion server**, to a **remote machine**.
-- You generally don't use the standard port the your end of the tunnel, in case you already have something listening on this port.
+- ```-N``` - *Do not execute a remote command.* This is useful for just forwarding ports. Which is the case we are exploiting. 
+- You generally don't use the standard port at your end of the tunnel, in case you already have something listening on this port.
 - Examples:
     - To ssh to an AWS Linux bastion running at 44.144.44.144 with key bastion-key.pem
         - ```ssh -i bastion-key.pem ec2-user@44.144.44.144```
