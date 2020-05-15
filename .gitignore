@@ -3,3 +3,4 @@ terraform.tfstate
 **/*tfplan
 *terraform.tfstate*.backup
 *.pem
+*.mp3
