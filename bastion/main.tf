@@ -214,8 +214,8 @@ output "information" {
     chmod 400 ${aws_key_pair.generated_key.key_name}.pem
     ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip}
 
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 11122:[AMAZON-LINUX-IP]:22
-    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 11122:[UBUNTU-IP]:22
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 11222:[AMAZON-LINUX-IP]:22
+    ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 11322:[UBUNTU-IP]:22
     ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 13389:[WINDOWS-IP]:3389
     ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 13306:[MYSQL-ENDPOINT]:3306
     ssh -i ${aws_key_pair.generated_key.key_name}.pem -p ${var.ssh_port} ec2-user@${aws_instance.bastion.public_ip} -N -L 15432:[POSTGRESQL-ENDPOINT]:5432

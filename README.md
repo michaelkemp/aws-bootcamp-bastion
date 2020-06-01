@@ -52,8 +52,8 @@
 
 ## Terraform Infrastructure and Bastion Server 
 
-- ```mkdir GitRepos```
-- ```cd GitRepos```
+- ```mkdir ~/GitRepos```
+- ```cd ~/GitRepos```
 - ```git clone https://github.com/michaelkemp/aws-bootcamp-bastion.git```
 - ```cd aws-bootcamp-bastion```
 - ```code .```
@@ -68,7 +68,7 @@
     - Change the non standard port that you would like to SSH into (rather than using port 22) 
 
 - To *Terraform* Test Infrastructure
-    - ```cd GitRepos/aws-bootcamp-bastion/infrastructure```
+    - ```cd ~/GitRepos/aws-bootcamp-bastion/infrastructure```
     - ```terraform init```
     - ```terraform apply```
     - Accept the changes ```yes```
@@ -80,7 +80,7 @@
     - Once we are finished, use ```terraform destroy``` to remove remove the infrastructure.
 
 - To *Terraform* the Bastion Server
-    - ```cd GitRepos/aws-bootcamp-bastion/bastion```
+    - ```cd ~/GitRepos/aws-bootcamp-bastion/bastion```
     - ```terraform init```
     - ```terraform apply```
     - Accept the changes ```yes```

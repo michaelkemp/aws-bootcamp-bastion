@@ -1,6 +1,0 @@
-Hi Everyone.
-
-Before we begin the AWS Bastion section of this training, I'd like to walk through setting up a development environment. 
-This takes about 8 and a half minutes, so if you have an environment and want to skip forward, feel free. 
-If you would like step by step instructions, they can be found at the displayed GitHub link, which also contains the terraform code I will use in this training.
-I am also not using my own voice because, as James will attest, I do not like how it sounds. So, I am using AWS Poly, to narrate the presentation.
