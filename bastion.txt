@@ -1,0 +1,48 @@
+Request Training Account Access
+===============================
+https://go.byu.edu/AWSTrainingAccountRequest
+
+byu-org-trn Account - VPC/Subnet Information
+=============================================
+Oregon VPC ID: 		vpc-0d4f716433bda1413
+Public Subnet IDs: 	subnet-071692a02d8fead70, subnet-0fe6609f28b3c2f83
+Private Subnet IDs: subnet-039dee9d86772d9a0, subnet-00ea541ae825d67fe
+Data Subnet IDs: 	subnet-0a7749029f9c6cc02, subnet-03d2524cefe73b748
+
+Log in to Train Account
+=======================
+https://awslogin.byu.edu/
+awslogin --account byu-org-trn --role PowerUser
+
+Clone Git Repo
+===============
+mkdir ~/GitRepos
+cd ~/GitRepos
+git clone https://github.com/michaelkemp/aws-bootcamp-bastion.git
+cd aws-bootcamp-bastion
+code .
+
+Terraform infrastructure
+========================
+cd ~/GitRepos/aws-bootcamp-bastion/infrastructure
+terraform init
+terraform apply
+
+chmod 400 prefix-infrastructure-key.pem
+
+Terraform bastion
+=================
+cd ~/GitRepos/aws-bootcamp-bastion/bastion
+terraform init
+terraform apply
+
+chmod 400 prefix-bastion-key.pem
+
+Terraform Destroy
+=================
+cd ~/GitRepos/aws-bootcamp-bastion/bastion
+terraform destroy
+
+cd ~/GitRepos/aws-bootcamp-bastion/infrastructure
+terraform destroy
+

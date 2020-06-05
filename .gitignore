@@ -3,6 +3,6 @@ terraform.tfstate
 **/*tfplan
 *terraform.tfstate*.backup
 *.pem
-*.mp3
-*.txt
-*.sh
+script/*.mp3
+script/*.txt
+script/*.sh
