@@ -4,3 +4,5 @@ terraform.tfstate
 *terraform.tfstate*.backup
 *.pem
 *.mp3
+*.txt
+*.sh

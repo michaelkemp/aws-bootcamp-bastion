@@ -1,0 +1,2 @@
+To make it easier to run the login command, I add the local bin directory to the path. 
+The text to add to the bash RC file can be found in the github read me.
