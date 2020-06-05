@@ -1,4 +1,0 @@
-Next, I install BYU's AWS command line login. 
-This enables us to log on to BYU accounts from the command line rather than the console. 
-Once logged on, we can use the AWS command line tool we just installed to manipulate infrastructure.
-As you can see, like the console login found at AWS login dot BYU dot E-D-U, the command line login also requires multi-factor authentication. 

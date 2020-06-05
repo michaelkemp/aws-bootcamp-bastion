@@ -1,6 +1,0 @@
-I will complete this demonstration using Microsoft Windows; but will install Windows Subsystem for Linux to give Microsoft users similar tools to the Apple and Linux folk.
-
-First I enable Windows Subsystem for Linux and install Ubuntu as the particular flavor. 
-This will enable me to open an Ububtu Linux terminal in Windows. 
-From the Linux terminal, I can SSH into an EC2 instance without the need to convert my keys to work with Putty. 
-It also means the tunneling I demonstrate later will work the same across Windows, Apple, and Linux.

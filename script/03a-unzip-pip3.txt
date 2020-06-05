@@ -1,1 +1,0 @@
-While I was installing the AWS command line tool, and the BYU login tool, I found there were two other utilities I needed. I therefore also install unzip and pip3.

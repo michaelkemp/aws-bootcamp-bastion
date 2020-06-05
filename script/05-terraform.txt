@@ -1,2 +1,0 @@
-And finally, I install Terraform as our infrastructure as code tool.
-I hope to demonstrate the benefits of using a tool like Terraform to create infrastructure later in the video.

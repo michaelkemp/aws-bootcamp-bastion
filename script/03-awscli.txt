@@ -1,2 +1,0 @@
-Next, the AWS command line tool. 
-This gives us the ability to query and manipulate infrastructure in AWS from the command line.
