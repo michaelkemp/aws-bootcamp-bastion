@@ -1,5 +1,10 @@
 # aws-bootcamp-bastion
 
+## BYU AWS Infrastructure
+
+- For more information regarding BYU's AWS network, subnets, and VPN, visit [https://michaelkemp.github.io/aws-bootcamp-byu-infrastructure/](https://michaelkemp.github.io/aws-bootcamp-byu-infrastructure/)
+- You should generally place your infrastructure in the Private and Data Subnets, accessing them via a Bastion.
+- This training creates test infrastructure in the Data and Private subnets, then demonstrates connecting to it via a Bastion Server placed in the Public Subnet
 
 ## Set Up Windows with Windows Subsystem for Linux (WSL)
 
