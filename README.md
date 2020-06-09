@@ -117,7 +117,7 @@
         - ```ssh -i bastion-key.pem ec2-user@44.144.44.144```
     - ssh to the same machine on a non standard port 22222 (not port 22) - *the machine must be setup to listen/respond on the non standard port*
         - ```ssh -i bastion-key.pem -p 22222 ec2-user@44.144.44.144```
-    - create a tunnel from the *local machine* on port **13006** through the *bastion* to a remote MySQL Server (**remote.mysql.amazon.com**) on port **3306**
+    - create a tunnel from the *local machine* on port **13306** through the *bastion* to a remote MySQL Server (**remote.mysql.amazon.com**) on port **3306**
         - ```ssh -i bastion-key.pem -p 22222 ec2-user@44.144.44.144 -N -L 13306:the.remote.mysql.amazon.com:3306```     
 - TCP/UDP ports range from 0 to 65535; when choosing a *local* port to forward, choose a number between 1024 and 49151 that is not in use.
 - With a tunnel running, connect to the infrastructure as if it is running locally - 127.0.0.1
