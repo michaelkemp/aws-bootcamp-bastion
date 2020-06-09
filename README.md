@@ -2,7 +2,7 @@
 
 ## Training Video
 
-    [https://www.youtube.com/watch?v=axw18bwMkKk](https://www.youtube.com/watch?v=axw18bwMkKk)
+[Bastion Training Video](https://www.youtube.com/watch?v=axw18bwMkKk)
 
 ## BYU AWS Infrastructure
 
