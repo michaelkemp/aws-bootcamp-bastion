@@ -1,5 +1,9 @@
 # aws-bootcamp-bastion
 
+## Training Video
+
+    [https://www.youtube.com/watch?v=axw18bwMkKk](https://www.youtube.com/watch?v=axw18bwMkKk)
+
 ## BYU AWS Infrastructure
 
 - For more information regarding BYU's AWS network, subnets, and VPN, visit [https://michaelkemp.github.io/aws-bootcamp-byu-infrastructure/](https://michaelkemp.github.io/aws-bootcamp-byu-infrastructure/)
